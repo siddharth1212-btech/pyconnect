@@ -10,12 +10,14 @@ class LoginScreen(ctk.CTkFrame):
 
         super().__init__(parent, fg_color="#0D1117")
 
+        self.parent = parent
+
         self.pack(fill="both", expand=True)
 
         card = ctk.CTkFrame(
             self,
             width=450,
-            height=500,
+            height=520,
             corner_radius=20,
             fg_color="#161B22"
         )
@@ -28,19 +30,26 @@ class LoginScreen(ctk.CTkFrame):
 
         ctk.CTkLabel(
             card,
-            text="Welcome Back 👋",
-            font=("Segoe UI", 28, "bold")
-        ).pack(pady=(40, 10))
+            text="💬 PyConnect",
+            font=("Segoe UI", 30, "bold")
+        ).pack(pady=(30, 5))
 
         ctk.CTkLabel(
             card,
-            text="Login to continue using PyConnect",
-            text_color="gray"
-        ).pack(pady=(0, 25))
+            text="Welcome Back 👋",
+            font=("Segoe UI", 24, "bold")
+        ).pack()
+
+        ctk.CTkLabel(
+            card,
+            text="Login to continue",
+            text_color="gray70",
+            font=("Segoe UI", 13)
+        ).pack(pady=(5, 25))
 
         self.username = ctk.CTkEntry(
             card,
-            width=320,
+            width=330,
             height=45,
             placeholder_text="Username"
         )
@@ -49,7 +58,7 @@ class LoginScreen(ctk.CTkFrame):
 
         self.password = ctk.CTkEntry(
             card,
-            width=320,
+            width=330,
             height=45,
             placeholder_text="Password",
             show="*"
@@ -57,65 +66,93 @@ class LoginScreen(ctk.CTkFrame):
 
         self.password.pack(pady=10)
 
+        self.username.bind(
+            "<Return>",
+            lambda e: self.password.focus()
+        )
+
+        self.password.bind(
+            "<Return>",
+            lambda e: self.login_user()
+        )
+
         ctk.CTkButton(
             card,
             text="Login",
-            width=320,
+            width=330,
             height=45,
+            corner_radius=10,
             command=self.login_user
-        ).pack(pady=20)
+        ).pack(pady=(25, 12))
 
         ctk.CTkButton(
             card,
             text="Create Account",
-            width=320,
+            width=330,
             height=45,
             fg_color="transparent",
             border_width=2,
+            corner_radius=10,
             command=self.open_register
         ).pack()
+
+        self.status = ctk.CTkLabel(
+            card,
+            text="",
+            text_color="#7CFC00",
+            font=("Segoe UI", 12)
+        )
+
+        self.status.pack(pady=12)
 
         ctk.CTkLabel(
             card,
             text="© 2026 PyConnect | Made by Siddharth",
-            text_color="gray",
-            font=("Segoe UI", 12)
-        ).pack(side="bottom", pady=20)
+            text_color="gray60",
+            font=("Segoe UI", 11)
+        ).pack(side="bottom", pady=18)
+
+    # ================= LOGIN =================
 
     def login_user(self):
 
         username = self.username.get().strip()
         password = self.password.get().strip()
 
-        if username == "" or password == "":
+        if not username or not password:
+
             messagebox.showerror(
                 "Error",
-                "Enter Username & Password"
+                "Please enter username and password."
             )
+
             return
 
-        if Auth.login(username, password):
+        ok = Auth.login(
+            username,
+            password
+        )
 
-            from client.chat import ChatScreen
-
-            self.destroy()
-
-            ChatScreen(
-                self.master,
-                username
-            )
-
-        else:
+        if not ok:
 
             messagebox.showerror(
-                "Error",
-                "Invalid Username or Password"
+                "Login Failed",
+                "Invalid username or password."
             )
+
+            return
+
+        self.status.configure(
+            text="Login Successful ✓"
+        )
+
+        self.after(
+            500,
+            lambda: self.parent.show_chat(username)
+        )
+
+    # ================= REGISTER =================
 
     def open_register(self):
 
-        from client.register import RegisterScreen
-
-        self.destroy()
-
-        RegisterScreen(self.master)
+        self.parent.show_register()
