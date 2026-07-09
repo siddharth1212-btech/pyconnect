@@ -1,0 +1,49 @@
+HOST = "127.0.0.1"
+PORT = 5555
+
+APP_NAME = "PyConnect"
+APP_VERSION = "2.0"
+
+WINDOW_WIDTH = 1400
+WINDOW_HEIGHT = 850
+
+MIN_WIDTH = 1200
+MIN_HEIGHT = 700
+
+MAX_MESSAGE_LENGTH = 1000
+
+DEFAULT_AVATAR = "👤"
+
+ONLINE = "🟢 Online"
+OFFLINE = "🔴 Offline"
+
+CHAT_TITLE = "General Chat"
+
+DB_NAME = "database/chat.db"
+
+FONT = "Segoe UI"
+
+MESSAGE_FONT = (FONT, 14)
+TITLE_FONT = (FONT, 28, "bold")
+SUBTITLE_FONT = (FONT, 16, "bold")
+SMALL_FONT = (FONT, 11)
+
+EMOJI_SIZE = 20
+
+PRIMARY_COLOR = "#2563EB"
+SECONDARY_COLOR = "#1F2937"
+BACKGROUND_COLOR = "#0D1117"
+CARD_COLOR = "#161B22"
+
+SUCCESS_COLOR = "#22C55E"
+ERROR_COLOR = "#EF4444"
+WARNING_COLOR = "#F59E0B"
+
+IMAGE_TYPES = (
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.gif",
+    "*.bmp",
+    "*.webp"
+)
