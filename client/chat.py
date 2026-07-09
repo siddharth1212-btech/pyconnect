@@ -3,9 +3,9 @@ import threading
 import json
 
 import customtkinter as ctk
-from client.components.message_bubble import MessageBubble
-from client.components.header import Header
+
 from client.components.sidebar import Sidebar
+from client.components.header import Header
 from client.components.chat_bubble import ChatBubble
 from client.components.typing_indicator import TypingIndicator
 from client.components.emoji_picker import EmojiPicker
@@ -31,8 +31,11 @@ class ChatScreen(ctk.CTkFrame):
 
         self.pack(fill="both", expand=True)
 
-        self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
+        self.message.bind("<KeyRelease>", self.on_typing)
+        self.message.bind("<FocusOut>", lambda e: self.stop_typing())
+        self.message.bind("<Return>", self.send_message)
 
         # ================= SIDEBAR =================
 
@@ -41,14 +44,15 @@ class ChatScreen(ctk.CTkFrame):
         self.sidebar.grid(
             row=0,
             column=0,
-            rowspan=3,
+            rowspan=4,
             sticky="ns"
         )
+
         # ================= HEADER =================
 
         self.header = Header(
             self,
-            self.username
+            username
         )
 
         self.header.grid(
@@ -56,35 +60,30 @@ class ChatScreen(ctk.CTkFrame):
             column=1,
             sticky="ew",
             padx=10,
-            pady=(10,0)
+            pady=(10, 0)
         )
 
-        ctk.CTkLabel(
-            self.header,
-            text=f"General Chat  |  {username}",
-            font=("Segoe UI",20,"bold")
-        ).pack(
-            side="left",
-            padx=20,
-            pady=18
-        )
+        # ================= TYPING =================
+
         self.typing = TypingIndicator(self)
 
         self.typing.grid(
             row=1,
             column=1,
             sticky="ew",
-            padx=15,
-            pady=(0, 5)
-)
+            padx=12,
+            pady=(5, 0)
+        )
 
         # ================= CHAT =================
 
         self.chat_box = ctk.CTkTextbox(
             self,
-            state="disabled",
             wrap="word",
-            font=("Consolas",14)
+            state="disabled",
+            fg_color="#0B0F15",
+            border_width=0,
+            font=("Segoe UI", 14)
         )
 
         self.chat_box.grid(
@@ -96,11 +95,11 @@ class ChatScreen(ctk.CTkFrame):
         )
 
         # ================= INPUT =================
-        
+
         self.bottom = ctk.CTkFrame(
             self,
-            height=70,
-            fg_color="#161B22"
+            fg_color="#161B22",
+            height=70
         )
 
         self.bottom.grid(
@@ -108,30 +107,32 @@ class ChatScreen(ctk.CTkFrame):
             column=1,
             sticky="ew",
             padx=10,
-            pady=(0,10)
+            pady=(0, 10)
         )
 
         self.bottom.grid_columnconfigure(0, weight=1)
 
         self.message = ctk.CTkEntry(
             self.bottom,
-            placeholder_text="Type a message...",
-            height=45
+            height=45,
+            placeholder_text="Type your message..."
         )
 
         self.message.grid(
             row=0,
             column=0,
             sticky="ew",
-            padx=(20,10),
+            padx=(20, 10),
             pady=15
         )
 
-
-        self.message.bind("<Return>", self.send_message)
+        self.message.bind(
+            "<Return>",
+            self.send_message
+        )
 
         self.emoji_btn = ctk.CTkButton(
-        self.bottom,
+            self.bottom,
             text="😀",
             width=45,
             command=self.open_emoji
@@ -140,19 +141,43 @@ class ChatScreen(ctk.CTkFrame):
         self.emoji_btn.grid(
             row=0,
             column=1,
-            padx=(0,8),
+            padx=(0, 8),
             pady=15
         )
-        self.image_btn = ctk.CTkButton(self.bottom,text="📷",width=45,command=self.send_image)
 
-        self.image_btn.grid(row=0,column=2,padx=(0,8),pady=15)
+        self.image_btn = ctk.CTkButton(
+            self.bottom,
+            text="📷",
+            width=45,
+            command=self.send_image
+        )
 
-        self.send_btn = ctk.CTkButton(self.bottom, text="Send", width=120, command=self.send_message)
+        self.image_btn.grid(
+            row=0,
+            column=2,
+            padx=(0, 8),
+            pady=15
+        )
 
-        self.send_btn.grid(row=0,column=3,padx=(0,20),pady=15)
+        self.send_btn = ctk.CTkButton(
+            self.bottom,
+            text="Send",
+            width=120,
+            command=self.send_message
+        )
 
-        threading.Thread(target=self.receive_messages,daemon=True).start()
-            # ================= RECEIVE =================
+        self.send_btn.grid(
+            row=0,
+            column=3,
+            padx=(0, 20),
+            pady=15
+        )
+
+        threading.Thread(
+            target=self.receive_messages,
+            daemon=True
+        ).start()
+        # ================= RECEIVE =================
 
     def receive_messages(self):
 
@@ -165,20 +190,42 @@ class ChatScreen(ctk.CTkFrame):
                 if not data:
                     break
 
-                packet = json.loads(data.decode())
+                packet = json.loads(
+                    data.decode()
+                )
 
-                if packet["type"] == "message":
+                packet_type = packet.get("type")
+
+                if packet_type == "message":
 
                     self.after(
                         0,
                         lambda t=packet["text"]: self.add_message(t)
                     )
 
-                elif packet["type"] == "users":
+                elif packet_type == "users":
 
                     self.after(
                         0,
                         lambda u=packet["users"]: self.update_users(u)
+                    )
+
+                elif packet_type == "typing":
+
+                    sender = packet.get("user")
+
+                    if sender != self.username:
+
+                        self.after(
+                            0,
+                            lambda s=sender: self.typing.show(s)
+                        )
+
+                elif packet_type == "stop_typing":
+
+                    self.after(
+                        0,
+                        self.typing.hide
                     )
 
             except Exception:
@@ -195,9 +242,13 @@ class ChatScreen(ctk.CTkFrame):
 
     def add_message(self, text):
 
-        self.chat_box.configure(state="normal")
+        self.chat_box.configure(
+            state="normal"
+        )
 
-        me = text.startswith(f"{self.username}:")
+        me = text.startswith(
+            f"{self.username}:"
+        )
 
         bubble = ChatBubble(
             self.chat_box,
@@ -208,14 +259,19 @@ class ChatScreen(ctk.CTkFrame):
         self.chat_box.window_create(
             "end",
             window=bubble
-        ) 
+        )
 
-        self.chat_box.insert("end", "\n")
+        self.chat_box.insert(
+            "end",
+            "\n"
+        )
 
-        self.chat_box.configure(state="disabled")
+        self.chat_box.configure(
+            state="disabled"
+        )
 
         self.chat_box.see("end")
-            # ================= SEND =================
+        # ================= SEND =================
 
     def send_message(self, event=None):
 
@@ -225,31 +281,31 @@ class ChatScreen(ctk.CTkFrame):
             return
 
         packet = {
+
             "type": "message",
+
             "text": f"{self.username}: {msg}"
+
         }
 
         try:
+
             self.client.send(
                 json.dumps(packet).encode()
             )
 
         except Exception:
-            self.add_message("❌ Unable to send message.")
+
+            self.add_message(
+                "❌ Unable to send message."
+            )
+
             return
 
-        self.message.delete(0, "end")
-
-    # ================= DISCONNECT =================
-
-        # ================= DISCONNECT =================
-
-    def disconnect(self):
-
-        try:
-            self.client.close()
-        except:
-            pass
+        self.message.delete(
+            0,
+            "end"
+        )
 
     # ================= EMOJI =================
 
@@ -277,10 +333,174 @@ class ChatScreen(ctk.CTkFrame):
             return
 
         packet = {
+
             "type": "message",
+
             "text": f"{self.username}: 📷 {path}"
+
         }
 
-        self.client.send(
-            json.dumps(packet).encode()
+        try:
+
+            self.client.send(
+                json.dumps(packet).encode()
+            )
+
+        except Exception:
+
+            self.add_message(
+                "❌ Failed to send image."
+            )
+            # ================= TYPING =================
+
+    def send_typing(self):
+
+        try:
+
+            packet = {
+
+                "type": "typing",
+
+                "user": self.username
+
+            }
+
+            self.client.send(
+                json.dumps(packet).encode()
+            )
+
+        except:
+
+            pass
+
+    def stop_typing(self):
+
+        try:
+
+            packet = {
+
+                "type": "stop_typing",
+
+                "user": self.username
+
+            }
+
+            self.client.send(
+                json.dumps(packet).encode()
+            )
+
+        except:
+
+            pass
+
+    # ================= DISCONNECT =================
+
+    def disconnect(self):
+
+        try:
+
+            self.stop_typing()
+
+            self.client.close()
+
+        except:
+
+            pass
+
+    # ================= CLOSE =================
+
+    def destroy(self):
+
+        self.disconnect()
+
+        super().destroy()
+
+
+    # ================= TYPING EVENTS =================
+
+    def on_typing(self, event=None):
+
+        text = self.message.get().strip()
+
+        if text == "":
+
+            self.stop_typing()
+
+        else:
+
+            self.send_typing()
+
+    # ================= CLEAR CHAT =================
+
+    def clear_chat(self):
+
+        self.chat_box.configure(
+            state="normal"
         )
+
+        self.chat_box.delete(
+            "1.0",
+            "end"
+        )
+
+        self.chat_box.configure(
+            state="disabled"
+        )
+
+    # ================= SYSTEM MESSAGE =================
+
+    def system_message(self, text):
+
+        self.add_message(
+            f"⚙ {text}"
+        )
+
+    # ================= CONNECTION LOST =================
+
+    def connection_lost(self):
+
+        self.system_message(
+            "Connection Lost."
+        )
+
+        try:
+
+            self.client.close()
+
+        except:
+
+            pass
+
+    # ================= RECONNECT =================
+
+    def reconnect(self):
+
+        try:
+
+            self.client = socket.socket(
+                socket.AF_INET,
+                socket.SOCK_STREAM
+            )
+
+            self.client.connect(
+                (HOST, PORT)
+            )
+
+            self.client.send(
+                self.username.encode()
+            )
+
+            threading.Thread(
+                target=self.receive_messages,
+                daemon=True
+            ).start()
+
+            self.system_message(
+                "Reconnected Successfully."
+            )
+
+        except:
+
+            self.system_message(
+                "Unable To Reconnect."
+            )
