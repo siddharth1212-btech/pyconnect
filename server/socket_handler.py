@@ -57,15 +57,11 @@ class SocketServer:
                 self.remove_client(client)
 
     # ---------------- ONLINE USERS ----------------
-
     def update_users(self):
-
+        print("ONLINE USERS =>", list(self.clients.values()))
         packet = {
-
             "type": "users",
-
             "users": list(self.clients.values())
-
         }
 
         self.broadcast(packet)

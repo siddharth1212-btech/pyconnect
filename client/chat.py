@@ -33,9 +33,6 @@ class ChatScreen(ctk.CTkFrame):
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(2, weight=1)
-        self.message.bind("<KeyRelease>", self.on_typing)
-        self.message.bind("<FocusOut>", lambda e: self.stop_typing())
-        self.message.bind("<Return>", self.send_message)
 
         # ================= SIDEBAR =================
 
@@ -131,6 +128,16 @@ class ChatScreen(ctk.CTkFrame):
             self.send_message
         )
 
+        self.message.bind(
+            "<KeyRelease>",
+            self.on_typing
+        )
+
+        self.message.bind(
+            "<FocusOut>",
+            lambda e: self.stop_typing()
+        )
+
         self.emoji_btn = ctk.CTkButton(
             self.bottom,
             text="😀",
@@ -193,6 +200,7 @@ class ChatScreen(ctk.CTkFrame):
                 packet = json.loads(
                     data.decode()
                 )
+                print(packet)
 
                 packet_type = packet.get("type")
 

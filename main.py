@@ -72,17 +72,18 @@ class PyConnectApp(ctk.CTk):
 
     def show_chat(self, username):
 
+        print("Opening Chat")
+
         self.clear()
+        
+        from client.chat import ChatScreen
 
-        import customtkinter as ctk
-
-        label = ctk.CTkLabel(
-            self,
-            text="CHAT OPENED",
-            font=("Arial", 40)
+        self.current_screen = ChatScreen(
+           self,
+           username
         )
 
-        label.pack(expand=True)
+        print("Chat Loaded")
 
     # ================= CLOSE =================
 
