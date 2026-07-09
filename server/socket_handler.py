@@ -13,53 +13,94 @@ class SocketServer:
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind((HOST, PORT))
-        self.server.listen()
+        self.server.listen(100)
 
-        self.clients = []
-        self.usernames = []
+        self.clients = {}
+        self.lock = threading.Lock()
 
-        print(f"Server Running : {HOST}:{PORT}")
+        print("=" * 50)
+        print("🚀 PyConnect Server Started")
+        print(f"🌐 Listening : {HOST}:{PORT}")
+        print("=" * 50)
+
+    # ---------------- SEND ----------------
 
     def send_packet(self, client, packet):
 
         try:
-            client.send(json.dumps(packet).encode())
+            client.send(
+                json.dumps(packet).encode()
+            )
         except:
             pass
 
-    def broadcast(self, packet):
+    # ---------------- BROADCAST ----------------
 
-        for client in self.clients:
-            self.send_packet(client, packet)
+    def broadcast(self, packet, exclude=None):
+
+        with self.lock:
+
+            dead = []
+
+            for client in self.clients.keys():
+
+                if client == exclude:
+                    continue
+
+                try:
+                    self.send_packet(client, packet)
+
+                except:
+                    dead.append(client)
+
+            for client in dead:
+                self.remove_client(client)
+
+    # ---------------- ONLINE USERS ----------------
 
     def update_users(self):
 
         packet = {
+
             "type": "users",
-            "users": self.usernames
+
+            "users": list(self.clients.values())
+
         }
 
         self.broadcast(packet)
 
+    # ---------------- REMOVE ----------------
+
     def remove_client(self, client):
 
-        if client in self.clients:
+        with self.lock:
 
-            index = self.clients.index(client)
+            if client not in self.clients:
+                return
 
-            username = self.usernames[index]
+            username = self.clients[client]
 
-            self.clients.pop(index)
-            self.usernames.pop(index)
+            del self.clients[client]
 
-            self.broadcast({
-                "type": "message",
-                "text": f"🔴 {username} left the chat"
-            })
+        print(f"❌ {username} Disconnected")
 
-            self.update_users()
+        self.broadcast({
 
+            "type": "message",
+
+            "text": f"🔴 {username} left the chat"
+
+        })
+
+        self.update_users()
+
+        try:
             client.close()
+        except:
+            pass
+
+    # ---------------- HANDLE ----------------
 
     def handle(self, client):
 
@@ -74,12 +115,23 @@ class SocketServer:
 
                 packet = json.loads(data.decode())
 
-                self.broadcast(packet)
+                if packet["type"] == "message":
+
+                    self.broadcast(packet)
+
+                elif packet["type"] == "typing":
+
+                    self.broadcast(
+                        packet,
+                        exclude=client
+                    )
 
             except:
                 break
 
         self.remove_client(client)
+
+    # ---------------- START ----------------
 
     def start(self):
 
@@ -87,22 +139,29 @@ class SocketServer:
 
             client, address = self.server.accept()
 
-            username = client.recv(1024).decode()
+            username = client.recv(1024).decode().strip()
 
-            self.clients.append(client)
-            self.usernames.append(username)
+            with self.lock:
+                self.clients[client] = username
 
-            print(f"{username} Connected : {address}")
+            print(f"✅ {username} Connected : {address}")
 
             self.broadcast({
+
                 "type": "message",
+
                 "text": f"🟢 {username} joined the chat"
+
             })
 
             self.update_users()
 
             threading.Thread(
+
                 target=self.handle,
+
                 args=(client,),
+
                 daemon=True
+
             ).start()

@@ -44,33 +44,6 @@ class ChatScreen(ctk.CTkFrame):
             rowspan=3,
             sticky="ns"
         )
-
-        ctk.CTkLabel(
-            self.sidebar,
-            text="💬 PyConnect",
-            font=("Segoe UI",24,"bold")
-        ).pack(pady=(25,15))
-
-        ctk.CTkLabel(
-            self.sidebar,
-            text="ONLINE USERS",
-            font=("Segoe UI",14,"bold"),
-            text_color="gray80"
-        ).pack()
-
-        self.users = ctk.CTkScrollableFrame(
-            self.sidebar,
-            width=220,
-            height=600
-        )
-
-        self.users.pack(
-            padx=15,
-            pady=15,
-            fill="both",
-            expand=True
-        )
-
         # ================= HEADER =================
 
         self.header = Header(
@@ -217,29 +190,6 @@ class ChatScreen(ctk.CTkFrame):
     def update_users(self, users):
 
         self.sidebar.update_users(users)
-
-        for widget in self.users.winfo_children():
-            widget.destroy()
-
-        for user in users:
-
-            if user == self.username:
-                text = f"🟢 {user} (You)"
-            else:
-                text = f"🟢 {user}"
-
-            lbl = ctk.CTkLabel(
-                self.users,
-                text=text,
-                anchor="w",
-                font=("Segoe UI",14)
-            )
-
-            lbl.pack(
-                fill="x",
-                padx=8,
-                pady=5
-            )
 
     # ================= CHAT =================
 
