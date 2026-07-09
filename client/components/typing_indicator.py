@@ -7,8 +7,11 @@ class TypingIndicator(ctk.CTkFrame):
 
         super().__init__(
             parent,
-            fg_color="transparent"
+            fg_color="transparent",
+            height=28
         )
+
+        self.pack_propagate(False)
 
         self.label = ctk.CTkLabel(
             self,
@@ -17,14 +20,34 @@ class TypingIndicator(ctk.CTkFrame):
             font=("Segoe UI", 12, "italic")
         )
 
-        self.label.pack(anchor="w", padx=15)
+        self.label.pack(
+            anchor="w",
+            padx=18,
+            pady=2
+        )
+
+        self.after_id = None
+
+    # ================= SHOW =================
 
     def show(self, username):
 
         self.label.configure(
-            text=f"{username} is typing..."
+            text=f"✍️ {username} is typing..."
         )
+
+        if self.after_id:
+            self.after_cancel(self.after_id)
+
+        self.after_id = self.after(
+            2000,
+            self.hide
+        )
+
+    # ================= HIDE =================
 
     def hide(self):
 
         self.label.configure(text="")
+
+        self.after_id = None

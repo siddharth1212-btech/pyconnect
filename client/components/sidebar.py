@@ -7,24 +7,42 @@ class Sidebar(ctk.CTkFrame):
 
         super().__init__(
             parent,
-            width=270,
+            width=280,
             fg_color="#111827",
             corner_radius=0
         )
 
         self.pack_propagate(False)
 
-        title = ctk.CTkLabel(
+        # ================= LOGO =================
+
+        self.logo = ctk.CTkLabel(
             self,
             text="💬 PyConnect",
-            font=("Segoe UI",26,"bold")
+            font=("Segoe UI", 28, "bold")
         )
 
-        title.pack(pady=(25,15))
+        self.logo.pack(
+            pady=(25, 5)
+        )
+
+        self.version = ctk.CTkLabel(
+            self,
+            text="Desktop Chat v2.0",
+            text_color="gray70",
+            font=("Segoe UI", 12)
+        )
+
+        self.version.pack(
+            pady=(0, 20)
+        )
+
+        # ================= SEARCH =================
 
         self.search = ctk.CTkEntry(
             self,
-            placeholder_text="Search user..."
+            height=40,
+            placeholder_text="🔍 Search User..."
         )
 
         self.search.pack(
@@ -32,16 +50,22 @@ class Sidebar(ctk.CTkFrame):
             fill="x"
         )
 
-        ctk.CTkLabel(
+        # ================= ONLINE TITLE =================
+
+        self.count = ctk.CTkLabel(
             self,
-            text="ONLINE",
-            text_color="gray70",
-            font=("Segoe UI",13,"bold")
-        ).pack(
+            text="🟢 Online Users (0)",
+            font=("Segoe UI", 14, "bold"),
+            text_color="#8BE28B"
+        )
+
+        self.count.pack(
             anchor="w",
             padx=15,
-            pady=(20,5)
+            pady=(20, 10)
         )
+
+        # ================= USER LIST =================
 
         self.user_frame = ctk.CTkScrollableFrame(
             self,
@@ -52,20 +76,40 @@ class Sidebar(ctk.CTkFrame):
             fill="both",
             expand=True,
             padx=10,
-            pady=(0,10)
+            pady=(0, 10)
         )
 
+        # ================= FOOTER =================
+
+        self.footer = ctk.CTkLabel(
+            self,
+            text="Made with ❤️ by Siddharth",
+            text_color="gray60",
+            font=("Segoe UI", 11)
+        )
+
+        self.footer.pack(
+            pady=10
+        )
+
+    # ==================================================
+
     def update_users(self, users):
+
+        self.count.configure(
+            text=f"🟢 Online Users ({len(users)})"
+        )
 
         for widget in self.user_frame.winfo_children():
             widget.destroy()
 
-        for user in users:
+        for user in sorted(users):
 
             card = ctk.CTkFrame(
                 self.user_frame,
                 fg_color="#1F2937",
-                corner_radius=12
+                corner_radius=15,
+                height=55
             )
 
             card.pack(
@@ -77,29 +121,52 @@ class Sidebar(ctk.CTkFrame):
             avatar = ctk.CTkLabel(
                 card,
                 text="👤",
-                font=("Segoe UI Emoji",22)
+                font=("Segoe UI Emoji", 22)
             )
 
             avatar.pack(
                 side="left",
-                padx=12,
-                pady=10
+                padx=(12, 8)
+            )
+
+            info = ctk.CTkFrame(
+                card,
+                fg_color="transparent"
+            )
+
+            info.pack(
+                side="left",
+                fill="both",
+                expand=True
             )
 
             name = ctk.CTkLabel(
-                card,
+                info,
                 text=user,
-                font=("Segoe UI",14,"bold")
+                anchor="w",
+                font=("Segoe UI", 14, "bold")
             )
 
             name.pack(
-                side="left"
+                anchor="w"
+            )
+
+            subtitle = ctk.CTkLabel(
+                info,
+                text="Online",
+                text_color="#7CFC00",
+                anchor="w",
+                font=("Segoe UI", 11)
+            )
+
+            subtitle.pack(
+                anchor="w"
             )
 
             status = ctk.CTkLabel(
                 card,
                 text="🟢",
-                font=("Segoe UI",15)
+                font=("Segoe UI", 16)
             )
 
             status.pack(

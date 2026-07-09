@@ -2,9 +2,13 @@ import customtkinter as ctk
 
 EMOJIS = [
     "😀","😁","😂","🤣","😊","😍","😘","😎",
-    "😭","😡","👍","👏","🙏","🔥","❤️","💯",
-    "🤔","🥳","🎉","😴","😅","😇","🤩","😜",
-    "😏","🙌","👌","💪","🎮","💻","📱","🚀"
+    "😭","😡","🥹","😇","🤩","😜","😏","🤔",
+    "👍","👎","👏","🙌","🙏","👌","💪","🤝",
+    "❤️","💙","💚","💛","🖤","🤍","💜","💯",
+    "🔥","✨","⭐","🌟","⚡","🎉","🥳","🎂",
+    "🎮","💻","📱","📸","🎵","🚀","☕","🍕",
+    "🐱","🐶","🌸","🌹","🌍","🌈","☀️","🌙",
+    "😴","🤯","🤖","👀","💀","😅","😋","🤤"
 ]
 
 
@@ -16,13 +20,41 @@ class EmojiPicker(ctk.CTkToplevel):
 
         self.callback = callback
 
-        self.title("Emoji")
+        self.title("😀 Emoji Picker")
 
-        self.geometry("420x260")
+        self.geometry("520x420")
 
         self.resizable(False, False)
 
         self.attributes("-topmost", True)
+
+        self.configure(fg_color="#111827")
+
+        self.grab_set()
+
+        title = ctk.CTkLabel(
+            self,
+            text="Choose an Emoji",
+            font=("Segoe UI", 20, "bold")
+        )
+
+        title.pack(
+            pady=(15, 10)
+        )
+
+        self.scroll = ctk.CTkScrollableFrame(
+            self,
+            width=470,
+            height=320,
+            fg_color="#161B22"
+        )
+
+        self.scroll.pack(
+            padx=15,
+            pady=10,
+            fill="both",
+            expand=True
+        )
 
         row = 0
         col = 0
@@ -30,25 +62,43 @@ class EmojiPicker(ctk.CTkToplevel):
         for emoji in EMOJIS:
 
             btn = ctk.CTkButton(
-                self,
+
+                self.scroll,
+
                 text=emoji,
-                width=45,
-                height=45,
+
+                width=48,
+
+                height=48,
+
+                corner_radius=10,
+
+                font=("Segoe UI Emoji", 20),
+
                 command=lambda e=emoji: self.select(e)
+
             )
 
             btn.grid(
+
                 row=row,
+
                 column=col,
-                padx=5,
-                pady=5
+
+                padx=6,
+
+                pady=6
+
             )
 
             col += 1
 
             if col == 8:
+
                 col = 0
                 row += 1
+
+    # ================= SELECT =================
 
     def select(self, emoji):
 
